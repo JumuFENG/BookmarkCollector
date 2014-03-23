@@ -1,0 +1,19 @@
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{D798AACC-CCEA-730B-AB16-CB1CC5DBC071}") = "BookmarkCollector", "BookmarkCollector.vcxproj", "{443DE1EE-4A48-DB3B-DB63-5B1A2BDBF0A6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{443DE1EE-4A48-DB3B-DB63-5B1A2BDBF0A6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{443DE1EE-4A48-DB3B-DB63-5B1A2BDBF0A6}.Debug|Win32.Build.0 = Debug|Win32
+		{443DE1EE-4A48-DB3B-DB63-5B1A2BDBF0A6}.Release|Win32.ActiveCfg = Release|Win32
+		{443DE1EE-4A48-DB3B-DB63-5B1A2BDBF0A6}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

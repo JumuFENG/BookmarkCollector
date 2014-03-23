@@ -5,6 +5,9 @@
               jucerVersion="3.1.0">
   <MAINGROUP id="IUT15q" name="BookmarkCollector">
     <GROUP id="{C0AC3876-1F78-0B72-6ED2-1460BFCC72F9}" name="Source">
+      <FILE id="mXLcDl" name="BookmarkFile.cpp" compile="1" resource="0"
+            file="Source/BookmarkFile.cpp"/>
+      <FILE id="rSfOKK" name="BookmarkFile.h" compile="0" resource="0" file="Source/BookmarkFile.h"/>
       <FILE id="XKF2Ih" name="BookMarkListener.h" compile="0" resource="0"
             file="Source/BookMarkListener.h"/>
       <FILE id="YiXAdX" name="SelectBookmarkFolder.h" compile="0" resource="0"

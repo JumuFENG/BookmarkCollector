@@ -61,7 +61,7 @@ public:
     {
         // This method is where you should set the bounds of any child
         // components that your component contains..
-        folderCombox.setBounds(1, 1, getWidth() - 40 - 30, 24);
+        folderCombox.setBounds(1, 1, getWidth() - 40, 24);
 
         arrowBtn->setBounds(getWidth() - 30, 8, 25, 15);
         arrowBtn->changeDirectionTo( bGrownUp ? 0.75f : 0.25f );

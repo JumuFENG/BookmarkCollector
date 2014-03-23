@@ -295,6 +295,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\BookmarkFile.cpp">
+      <Filter>BookmarkCollector\Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\Main.cpp">
       <Filter>BookmarkCollector\Source</Filter>
     </ClCompile>
@@ -1491,6 +1494,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\BookmarkFile.h">
+      <Filter>BookmarkCollector\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\BookMarkListener.h">
       <Filter>BookmarkCollector\Source</Filter>
     </ClInclude>

@@ -13,18 +13,22 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-class BookmarkFileIO{
+class BookmarkFileIO {
 public:
     BookmarkFileIO(const String& file = String::empty)
         : filename(file)
     {
         if (filename.isNotEmpty())
         {
-            bookmarkOrigin = JSON::parse(File(filename));
-            bookmarks = bookmarkOrigin["base"];
-            mergeChanges(bookmarkOrigin["changerecords"]);
+            File jsonFile(filename);
+            if (jsonFile.exists())
+            {
+                bookmarkOrigin = JSON::parse(File(filename));
+                bookmarks = bookmarkOrigin["base"];
+                mergeChanges(bookmarkOrigin["changerecords"]);
+            }
         }
-        else
+        if (bookmarks == var())
         {
             bookmarks = JSON::parse("{}");
             bookmarks.getDynamicObject()->setProperty("bm_toolbar", String::empty);
@@ -69,5 +73,6 @@ private:
     var      bookmarkOrigin;
     var      bookmarks;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BookmarkFileIO)
-}
+};
+
 #endif  // BOOKMARKFILE_H_INCLUDED

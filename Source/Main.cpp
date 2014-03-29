@@ -26,8 +26,11 @@ public:
     //==============================================================================
     void initialise (const String& commandLine)
     {
+        LoadDtdData::getInstance()->parseDtdFile("strings.dtd");
+        BookmarkFileIO::getInstance()->init("bookmarks.json");
+
         wnd = new TransparentWnd();
-        wnd->addToDesktop(ComponentPeer::windowIsSemiTransparent);
+        wnd->addToDesktop(ComponentPeer::windowIsTemporary);
         wnd->setAlwaysOnTop(true);
         wnd->setVisible(true);
         // Add your application's initialisation code here..
@@ -35,6 +38,10 @@ public:
 
     void shutdown()
     {
+        BookmarkFileIO::getInstance()->saveToFile();
+        BookmarkFileIO::deleteInstance();
+        LoadDtdData::deleteInstance();
+        wnd = nullptr;
         // Add your application's shutdown code here..
     }
 

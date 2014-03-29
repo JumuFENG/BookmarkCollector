@@ -12,7 +12,9 @@
 #define SELECTBOOKMARKFOLDER_H_INCLUDED
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "BookmarkFile.h"
 #include "BookMarkListener.h"
+#include "BookmarkBrowser.h";
 
 //==============================================================================
 /*
@@ -36,8 +38,10 @@ public:
         addAndMakeVisible(arrowBtn);//Colours::mediumslateblue
         arrowBtn->addListener(this);
 
-        addAndMakeVisible(combox);
-        combox.setText(String(L"String"), dontSendNotification);
+        viewPort = new Viewport();
+        combox = new BookmarkFolderContainer(BookmarkFileIO::getInstance()->getBookmarkLists());
+        viewPort->setViewedComponent(combox);
+        addAndMakeVisible(viewPort);
      }
 
     ~SelectBookmarkFolder()
@@ -68,12 +72,13 @@ public:
 
         if (bGrownUp)
         {
-            combox.setBoundsInset(BorderSize<int>(30, 1, 1, 1));
+            viewPort->setBoundsInset(BorderSize<int>(30, 1, 1, 1));
         }
         else
         {
-            combox.setBounds(0, 0, 0, 0);
+            viewPort->setBounds(0, 0, 0, 0);
         }
+        combox->setSize(viewPort->getWidth() - (viewPort->isVerticalScrollBarShown() ? 20 : 2), combox->getHeight());
     }
 
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -102,12 +107,12 @@ public:
     void fillupFolderCombox()
     {
         folderCombox.clear(dontSendNotification);
-        folderCombox.addItem(String(L"Bookmark Toolbar"), 1);
-        folderCombox.addItem(String(L"Other Bookmarks"), 2);
+        folderCombox.addItem(LoadDtdData::getInstance()->getEntityFromDtds("bookmark.toolbar"), 1);
+        folderCombox.addItem(LoadDtdData::getInstance()->getEntityFromDtds("bookmark.notclassify"), 2);
         if ( !bGrownUp )
         {
             folderCombox.addSeparator();
-            folderCombox.addItem(String(L"Choose..."), 3);
+            folderCombox.addItem(LoadDtdData::getInstance()->getEntityFromDtds("combox.choose"), 3);
             folderCombox.addSeparator();
         }
         folderCombox.addItem(String(L"Folder 1"), 4);
@@ -119,7 +124,7 @@ public:
     {
         fillupFolderCombox();
 
-        int ww = bGrownUp ? 500 : 278;
+        int ww = bGrownUp ? 460 : 278;
         int hh = bGrownUp ? 300 : 150;
         int iright = getParentComponent()->getRight();
         int iTop = getParentComponent()->getY();
@@ -130,8 +135,8 @@ private:
     bool     bGrownUp;
     ComboBox folderCombox;
     ScopedPointer<ArrowButton> arrowBtn;
-
-    Label  combox;
+    ScopedPointer<Viewport>    viewPort;
+    ScopedPointer<BookmarkFolderContainer>  combox;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectBookmarkFolder)

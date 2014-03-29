@@ -13,6 +13,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SelectBookmarkFolder.h"
+#include "BookmarkFile.h"
 
 //==============================================================================
 /*
@@ -24,33 +25,33 @@ class BookmarkAdder
 public:
     BookmarkAdder() 
         : topSideHeigth(115)
-        , bookmarkListener(nullptr)
         , bExpanded(false)
+        , bookmarkListener(nullptr)
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
         setLookAndFeel(&v1);
         labelTitle.setFont(20.0f);
-        labelTitle.setText(String(L"Save As Bookmark"), dontSendNotification);
+        labelTitle.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.title"), dontSendNotification);
         addAndMakeVisible(labelTitle);
 
         labelName.setFont(15.0f);
-        labelName.setText(String(L"Name"), dontSendNotification);
+        labelName.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.name"), dontSendNotification);
         addAndMakeVisible(labelName);
         txtName.setText(String(L"Website Name"));
         addAndMakeVisible(txtName);
 
         labelFolder.setFont(15.0f);
-        labelFolder.setText(String(L"Folder"), dontSendNotification);//文件夹
+        labelFolder.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.folder"), dontSendNotification);//文件夹
         addAndMakeVisible(labelFolder);
 
         addAndMakeVisible(selectFolder);
 
-        btnDel.setButtonText(String(L"Delete"));
+        btnDel.setButtonText(LoadDtdData::getInstance()->getEntityFromDtds("adder.button.delete"));
         btnDel.addListener(this);
-        btnDone.setButtonText(String(L"Done"));
+        btnDone.setButtonText(LoadDtdData::getInstance()->getEntityFromDtds("adder.button.done"));
         btnDone.addListener(this);
-        btnCancle.setButtonText(String(L"Cancle"));
+        btnCancle.setButtonText(LoadDtdData::getInstance()->getEntityFromDtds("adder.button.cancle"));
         btnCancle.addListener(this);
         addAndMakeVisible(btnDel);
         addAndMakeVisible(btnCancle);

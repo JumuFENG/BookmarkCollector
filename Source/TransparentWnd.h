@@ -30,7 +30,6 @@ public:
         // initialise any special settings that your component needs.
         setSize(300, 50);
         bShowBorder = false;
-        bookmark = new BookmarkFileIO("bookmarks.json");
     }
 
     ~TransparentWnd()
@@ -81,14 +80,12 @@ public:
         if (event.mods.isPopupMenu())
         {
             PopupMenu popup;
-            popup.addItem( 3001, String( L"Exit" ) );
-//            popup.addItem( 3001, String( L"退出" ) );
+            popup.addItem( 3001, LoadDtdData::getInstance()->getEntityFromDtds("mainmenu.exit") );
             int iRet = popup.show();
             switch (iRet)
             {
             case 3001:
                 // 退出事件
-                bookmark->saveToFile("bookmarks.json");
                 JUCEApplication::getInstance()->systemRequestedQuit();
                 break;
             default:
@@ -96,7 +93,7 @@ public:
             }
             return;
         }
-        bookmarkAdder = nullptr;
+
         bookmarkAdder = std::shared_ptr<BookmarkAdder>(new BookmarkAdder()) ;
         bookmarkAdder->addBookmarkListener(this);
         bookmarkAdder->addToDesktop(ComponentPeer::windowIsTemporary);
@@ -123,7 +120,6 @@ public:
     }
 
 private:
-    ScopedPointer<BookmarkFileIO>  bookmark;
     std::shared_ptr<BookmarkAdder> bookmarkAdder;
     bool  bShowBorder;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransparentWnd)

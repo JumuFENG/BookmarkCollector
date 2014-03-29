@@ -103,7 +103,8 @@ public:
         }
         if ( &btnDel == btnThatClicked )
         {
-            bookmarkListener->onMessageTriggered(BookMarkListener::kDel);
+            selectFolder.testAddChild();
+            //bookmarkListener->onMessageTriggered(BookMarkListener::kDel);
         }
         else if ( &btnDone == btnThatClicked )
         {

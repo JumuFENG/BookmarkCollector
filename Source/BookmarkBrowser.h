@@ -52,10 +52,16 @@ private:
 
 class BookmarkFolderContainer;
 
+class SizeChangeListener{
+public:
+    virtual void onNewSize() = 0;
+};
+
 class BookmarkFolder
     : public ButtonListener
     , public Component
     , public LabelListener
+    , public SizeChangeListener
 {
 public:
     BookmarkFolder(var itm, bool canRename = true);
@@ -66,27 +72,43 @@ public:
 
     void resized();
 
+    bool isExpanded();
+
     void showChildren();
+
+    void hideChildren();
 
     void buttonClicked(Button* btnThatClicked);
 
     void labelTextChanged(Label* labelThatHasChanged);
 
     void mouseUp(const MouseEvent& event);
-
+    void mouseDoubleClick(const MouseEvent& event);
     void mouseEnter(const MouseEvent& event);
 
     void mouseExit(const MouseEvent& event);
 
+    int getAcctuallyHeight();
+
+    void setNewSize();
+
+    void addSubFolders(var sfdr);
+
+    void onNewSize();
+
+    void addSizeChangeListener(SizeChangeListener* lsn);
 
 private:
     var    item;
     Image  img;
+    Rectangle<int> validRect;
     ScopedPointer<ArrowButton> triBtn;
     ScopedPointer<FolderIcon>  icon;
     ScopedPointer<Label>       label;
 
     ScopedPointer<BookmarkFolderContainer> childFolders;
+
+    SizeChangeListener*  sizeListener;
 
     int    iconWidth;
     int    triWidth, triHeight;
@@ -98,7 +120,9 @@ private:
 
 };
 
-class BookmarkFolderContainer    : public Component
+class BookmarkFolderContainer    
+    : public Component
+    , public SizeChangeListener
 {
 public:
     BookmarkFolderContainer();
@@ -108,10 +132,14 @@ public:
     void paint (Graphics&);
     void resized();
     void addChildrenFolders(var folders);
+    void setNewSize();
+    void onNewSize();
+    void addSizeChangeListener(SizeChangeListener* lsn);
 
 private:
 	std::vector<ScopedPointer<BookmarkFolder> >  folderContainer;
     var  varfolders;   // array
+    SizeChangeListener* sizeListener;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BookmarkFolderContainer)

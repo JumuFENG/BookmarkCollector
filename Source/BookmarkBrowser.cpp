@@ -19,6 +19,7 @@ BookmarkFolder::BookmarkFolder(var itm, bool canRename)
     , triHeight(10)
     , bExpanded(false)
     , bHover(false)
+    , sizeListener(nullptr)
 {
     if ( BookmarkFileIO::getInstance()->isContentHasSubfolder(item["content"]))
     {
@@ -39,7 +40,8 @@ BookmarkFolder::BookmarkFolder(var itm, bool canRename)
     addAndMakeVisible(label);
 
     childFolders = new BookmarkFolderContainer();
-
+    addChildComponent(childFolders);
+    childFolders->addSizeChangeListener(this);
     addMouseListener(this, true);
 }
 
@@ -53,9 +55,15 @@ void BookmarkFolder::paint(Graphics& g)
     g.fillAll(Colours::white);
     if (bHover)
     {
-        g.fillAll(Colours::blue.withAlpha(0.15f));
-        g.setColour(Colours::lightgrey);
-        g.drawRect(getLocalBounds(), 1);
+        validRect = Rectangle<int>(0, 0, getWidth(), iconWidth + 2 );
+        Point<int> mPos = getMouseXYRelative();
+        if (validRect.contains(mPos))
+        {
+            g.setColour(Colours::blue.withAlpha(0.15f));
+            g.fillRect(validRect);
+            g.setColour(Colours::lightgrey);
+            g.drawRect(validRect, 1);
+        }
     }
 }
 
@@ -71,11 +79,43 @@ void BookmarkFolder::resized()
 
     icon->setBounds(3 + triWidth, 1, iconWidth, iconWidth);
     label->setBounds(5 + triWidth + iconWidth, 1, getWidth() - 10 - triWidth - iconWidth, iconWidth);
+    if (getHeight() <= 0)
+    {
+        setSize(getWidth(), iconWidth);
+    }
 }
 
 void BookmarkFolder::showChildren()
 {
+    childFolders->setVisible(true);
+    childFolders->setTopLeftPosition(1 + triWidth, iconWidth + 3);
+    childFolders->setSize(getWidth() - triWidth, 100);
     childFolders->addChildrenFolders(item["content"]);
+}
+
+void BookmarkFolder::hideChildren()
+{
+    childFolders->setBounds(0, 0, 0, 0);
+    childFolders->setVisible(false);
+}
+
+void BookmarkFolder::onNewSize()
+{
+    setNewSize();
+}
+
+void BookmarkFolder::addSizeChangeListener(SizeChangeListener* lsn)
+{
+    sizeListener = lsn;
+}
+
+void BookmarkFolder::setNewSize()
+{
+    setSize(getWidth(), getAcctuallyHeight());
+    if (sizeListener != nullptr)
+    {
+        sizeListener->onNewSize();
+    }
 }
 
 void BookmarkFolder::buttonClicked(Button* btnThatClicked)
@@ -83,8 +123,9 @@ void BookmarkFolder::buttonClicked(Button* btnThatClicked)
     if (btnThatClicked == triBtn)
     {
         bExpanded = triBtn->getArrowDirection() == 0.0f;
-        showChildren();
     }
+    bExpanded ? showChildren() : hideChildren();
+    setNewSize();
 }
 
 void BookmarkFolder::labelTextChanged(Label* labelThatHasChanged)
@@ -92,6 +133,18 @@ void BookmarkFolder::labelTextChanged(Label* labelThatHasChanged)
     if (labelThatHasChanged == label)
     {
         item["name"] = label->getText();
+    }
+}
+
+void BookmarkFolder::addSubFolders(var sfdr)
+{
+    childFolders->addChildrenFolders(sfdr);
+    if (triBtn == nullptr)
+    {
+        triBtn = new ArrowButton(String("arrowL"), 0.0f, Colour::fromRGBA(0x7b, 0x68, 0xee, 0x7f));
+        triBtn->addListener(this);
+        addAndMakeVisible(triBtn);
+        resized();
     }
 }
 
@@ -107,9 +160,19 @@ void BookmarkFolder::mouseUp(const MouseEvent& event)
             newFolder.getDynamicObject()->setProperty("name", 
                 LoadDtdData::getInstance()->getEntityFromDtds("menu.newfolder"));
             newFolder.getDynamicObject()->setProperty("content", String::empty);
-            childFolders->addChildrenFolders(newFolder);
+            var childFdr;
+            childFdr.append(newFolder);
+            addSubFolders(childFdr);
         }
     }
+}
+
+void BookmarkFolder::mouseDoubleClick(const MouseEvent& event)
+{
+//     if (triBtn != nullptr && validRect.contains(event.getPosition()))
+//     {
+//         buttonClicked(triBtn);
+//     }
 }
 
 void BookmarkFolder::mouseEnter(const MouseEvent& event)
@@ -124,14 +187,26 @@ void BookmarkFolder::mouseExit(const MouseEvent& event)
     repaint();
 }
 
+bool BookmarkFolder::isExpanded()
+{
+    return bExpanded;
+}
+
+int BookmarkFolder::getAcctuallyHeight()
+{
+    return bExpanded ? iconWidth + childFolders->getHeight() : iconWidth + 3;
+}
+
 //=======================================================================
 BookmarkFolderContainer::BookmarkFolderContainer()
+    : sizeListener(nullptr)
 {
-
+    setSize(100,100);
 }
 
 BookmarkFolderContainer::BookmarkFolderContainer(var folders) 
     : varfolders(folders)
+    , sizeListener(nullptr)
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
@@ -177,9 +252,11 @@ BookmarkFolderContainer::BookmarkFolderContainer(var folders)
     for (int i = 0; i < vsize; ++i)
     {
         addAndMakeVisible(folderContainer[i]);
+        folderContainer[i]->addSizeChangeListener(this);
     }
 
-    setSize(100, 100); // 主要目的设置高度，宽度Viewport确定
+    setSize(100,100);// 主要目的设置高度，宽度Viewport确定
+    setNewSize(); 
 }
 
 BookmarkFolderContainer::~BookmarkFolderContainer()
@@ -205,9 +282,11 @@ void BookmarkFolderContainer::resized()
 	int iconWidth = jmin<int>(20, getWidth());
 	int iconHeigth = jmin<int>(20, getHeight());
 
+    int oldY = 3;
     for (int i = 0; i < varfolders.size(); ++i)
     {
-        folderContainer[i]->setBounds(3, 3 + iconHeigth * i, getWidth() - 6, iconHeigth);
+        folderContainer[i]->setBounds(3, oldY, getWidth() - 6, iconHeigth);
+        oldY += folderContainer[i]->getAcctuallyHeight();
     }
 }
 
@@ -222,5 +301,32 @@ void BookmarkFolderContainer::addChildrenFolders(var folders)
     for (size_t i = 0; i < folderContainer.size(); ++i)
     {
         addAndMakeVisible(folderContainer[i]);
+        folderContainer[i]->addSizeChangeListener(this);
     }
+    setNewSize();
+}
+
+void BookmarkFolderContainer::setNewSize()
+{
+    int h = 4;
+    for (size_t fsize = 0;  fsize < folderContainer.size(); ++fsize)
+    {
+        int nH = folderContainer[fsize]->getAcctuallyHeight();
+        h += nH > 0 ? nH : 16;
+    }
+    setSize(getWidth(), h);
+    if (sizeListener != nullptr)
+    {
+        sizeListener->onNewSize();
+    }
+}
+
+void BookmarkFolderContainer::addSizeChangeListener(SizeChangeListener* lsn)
+{
+    sizeListener = lsn;
+}
+
+void BookmarkFolderContainer::onNewSize()
+{
+    setNewSize();
 }

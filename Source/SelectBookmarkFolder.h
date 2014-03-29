@@ -39,8 +39,8 @@ public:
         arrowBtn->addListener(this);
 
         viewPort = new Viewport();
-        combox = new BookmarkFolderContainer(BookmarkFileIO::getInstance()->getBookmarkLists());
-        viewPort->setViewedComponent(combox);
+        bookmarkFolderView = new BookmarkFolderContainer(BookmarkFileIO::getInstance()->getBookmarkLists());
+        viewPort->setViewedComponent(bookmarkFolderView);
         addAndMakeVisible(viewPort);
      }
 
@@ -78,7 +78,7 @@ public:
         {
             viewPort->setBounds(0, 0, 0, 0);
         }
-        combox->setSize(viewPort->getWidth() - (viewPort->isVerticalScrollBarShown() ? 20 : 2), combox->getHeight());
+        bookmarkFolderView->setSize(viewPort->getWidth() - (viewPort->isVerticalScrollBarShown() ? 20 : 2), bookmarkFolderView->getHeight());
     }
 
     void comboBoxChanged(ComboBox* comboBoxThatHasChanged)
@@ -131,12 +131,28 @@ public:
         getParentComponent()->setBounds(iright - ww, iTop, ww, hh);
     }
 
+    void testAddChild()
+    {
+//         var nf = JSON::parse("{}");
+//         nf.getDynamicObject()->setProperty("name", "new one");
+//         nf.getDynamicObject()->setProperty("content", String::empty);
+//         var p; 
+//         p.append(nf);
+//         var newFolder = JSON::parse("{}");
+//         newFolder.getDynamicObject()->setProperty("name", 
+//             LoadDtdData::getInstance()->getEntityFromDtds("menu.newfolder"));
+//         newFolder.getDynamicObject()->setProperty("content", String::empty);
+//         var childFdr;
+//         childFdr.append(newFolder);
+//         bookmarkFolderView->addSubFolders(childFdr);
+    }
+
 private:
     bool     bGrownUp;
     ComboBox folderCombox;
     ScopedPointer<ArrowButton> arrowBtn;
     ScopedPointer<Viewport>    viewPort;
-    ScopedPointer<BookmarkFolderContainer>  combox;
+    ScopedPointer<BookmarkFolderContainer>  bookmarkFolderView;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectBookmarkFolder)

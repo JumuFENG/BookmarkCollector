@@ -1,0 +1,11 @@
+<!ENTITY mainmenu.exit "退出">
+<!ENTITY menu.newfolder "新建文件夹">
+<!ENTITY adder.title "另存为书签">
+<!ENTITY adder.name "名称">
+<!ENTITY adder.folder "文件夹">
+<!ENTITY adder.button.done "完成">
+<!ENTITY adder.button.delete "删除">
+<!ENTITY adder.button.cancle "取消">
+<!ENTITY bookmark.toolbar "书签工具栏">
+<!ENTITY bookmark.notclassify "未分类书签">
+<!ENTITY combox.choose "选择...">

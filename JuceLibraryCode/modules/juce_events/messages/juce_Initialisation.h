@@ -96,7 +96,7 @@ public:
   #else
    #define JUCE_MAIN_FUNCTION       int __stdcall WinMain (void*, void*, const char*, int)
   #endif
-  #define  JUCE_MAIN_FUNCTION_ARGS
+  #define  JUCE_MAIN_FUNCTION_ARGS  
  #else
   #define  JUCE_MAIN_FUNCTION       int main (int argc, char* argv[])
   #define  JUCE_MAIN_FUNCTION_ARGS  argc, (const char**) argv

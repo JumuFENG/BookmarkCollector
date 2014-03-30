@@ -292,6 +292,9 @@
     <Filter Include="Juce Library Code">
       <UniqueIdentifier>{8B4D1BAA-6DB4-CAEC-A0FA-271F354D5C61}</UniqueIdentifier>
     </Filter>
+    <Filter Include="BookmarkCollector\AccObject">
+      <UniqueIdentifier>{c2bc52a0-5dc3-4b31-8f66-f496da8223de}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\BookmarkFile.cpp">
@@ -2754,6 +2757,12 @@
       <Filter>BookmarkCollector\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\BookmarkBrowser.h">
+      <Filter>BookmarkCollector\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\MSAAObj.h">
+      <Filter>BookmarkCollector\AccObject</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DeskWndObserver.h">
       <Filter>BookmarkCollector\Source</Filter>
     </ClInclude>
   </ItemGroup>

@@ -23,7 +23,7 @@ class BookmarkAdder
     , public ButtonListener
 {
 public:
-    BookmarkAdder() 
+    BookmarkAdder(const String& name) 
         : topSideHeigth(115)
         , bExpanded(false)
         , bookmarkListener(nullptr)
@@ -38,7 +38,8 @@ public:
         labelName.setFont(15.0f);
         labelName.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.name"), dontSendNotification);
         addAndMakeVisible(labelName);
-        txtName.setText(String(L"Website Name"));
+//        txtName.setFont(Font("微软雅黑", 14.0f, 0));
+        txtName.setText(name);
         addAndMakeVisible(txtName);
 
         labelFolder.setFont(15.0f);

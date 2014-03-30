@@ -14,7 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "BookmarkFile.h"
 #include "BookMarkListener.h"
-#include "BookmarkBrowser.h";
+#include "BookmarkBrowser.h"
 
 //==============================================================================
 /*

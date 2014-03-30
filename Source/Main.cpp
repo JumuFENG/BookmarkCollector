@@ -10,6 +10,8 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "TransparentWnd.h"
+#include "DeskWndObserver.h"
+#include <string>
 
 //==============================================================================
 class NewProjectApplication  
@@ -29,7 +31,15 @@ public:
         LoadDtdData::getInstance()->parseDtdFile("strings.dtd");
         BookmarkFileIO::getInstance()->init("bookmarks.json");
 
-        wnd = new TransparentWnd();
+        DeskWndObserver obsvr;
+        obsvr.FindTargetWnd();
+        obsvr.FindAccObj();
+        RECT rct = obsvr.getFavirateRect();
+        juce::Rectangle<int> wndPos(rct.left * 0.8f, rct.top * 0.8f, rct.right * 0.8f, rct.bottom * 0.8f);
+        TCHAR szTitle[MAX_PATH] = {0};
+        int len = obsvr.GetWindowTitle(szTitle);
+        String title = String::fromUTF8(szTitle);
+        wnd = new TransparentWnd(wndPos, title);
         wnd->addToDesktop(ComponentPeer::windowIsTemporary);
         wnd->setAlwaysOnTop(true);
         wnd->setVisible(true);

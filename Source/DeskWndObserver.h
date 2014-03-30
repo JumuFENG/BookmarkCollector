@@ -27,6 +27,8 @@ public:
         OleUninitialize();
     }
 
+    juce_DeclareSingleton(DeskWndObserver, true);
+
     void FindTargetWnd()
     {
         std::vector<HWND> wnds;
@@ -58,6 +60,11 @@ public:
         TCHAR tmsz[MAX_PATH] = {0};
         GetWindowText(wndHandle, tmsz, MAX_PATH);
         return Convert(tmsz, lpszTitle, CP_ACP, CP_UTF8);
+    }
+
+    std::string GetWebHref()
+    {
+        return accaddressObjData.m_Value;
     }
 
     int Convert(const char* strIn, char* strOut, int sourceCodepage, int targetCodepage)

@@ -13,6 +13,8 @@
 #include "DeskWndObserver.h"
 #include <string>
 
+juce_ImplementSingleton(DeskWndObserver)
+
 //==============================================================================
 class NewProjectApplication  
     : public JUCEApplication
@@ -31,15 +33,12 @@ public:
         LoadDtdData::getInstance()->parseDtdFile("strings.dtd");
         BookmarkFileIO::getInstance()->init("bookmarks.json");
 
-        DeskWndObserver obsvr;
-        obsvr.FindTargetWnd();
-        obsvr.FindAccObj();
-        RECT rct = obsvr.getFavirateRect();
+        DeskWndObserver::getInstance()->FindTargetWnd();
+        DeskWndObserver::getInstance()->FindAccObj();
+        
+        RECT rct = DeskWndObserver::getInstance()->getFavirateRect();
         juce::Rectangle<int> wndPos(rct.left * 0.8f, rct.top * 0.8f, rct.right * 0.8f, rct.bottom * 0.8f);
-        TCHAR szTitle[MAX_PATH] = {0};
-        int len = obsvr.GetWindowTitle(szTitle);
-        String title = String::fromUTF8(szTitle);
-        wnd = new TransparentWnd(wndPos, title);
+        wnd = new TransparentWnd(wndPos);
         wnd->addToDesktop(ComponentPeer::windowIsTemporary);
         wnd->setAlwaysOnTop(true);
         wnd->setVisible(true);
@@ -51,6 +50,7 @@ public:
         BookmarkFileIO::getInstance()->saveToFile();
         BookmarkFileIO::deleteInstance();
         LoadDtdData::deleteInstance();
+        DeskWndObserver::deleteInstance();
         wnd = nullptr;
         // Add your application's shutdown code here..
     }

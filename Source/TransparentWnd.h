@@ -24,9 +24,8 @@ class TransparentWnd
     , public BookMarkListener
 {
 public:
-    TransparentWnd(juce::Rectangle<int> pos, const String& name)
-        : strName(name)
-        , wndLoc(pos)
+    TransparentWnd(juce::Rectangle<int> pos)
+        : wndLoc(pos)
         , bShowBorder (false)
     {
         // In your constructor, you should add any child components, and
@@ -96,7 +95,7 @@ public:
             return;
         }
 
-        bookmarkAdder = std::shared_ptr<BookmarkAdder>(new BookmarkAdder(strName)) ;
+        bookmarkAdder = std::shared_ptr<BookmarkAdder>(new BookmarkAdder()) ;
         bookmarkAdder->addBookmarkListener(this);
         bookmarkAdder->addToDesktop(ComponentPeer::windowIsTemporary);
         bookmarkAdder->setSize(278, 150);
@@ -125,7 +124,6 @@ private:
     std::shared_ptr<BookmarkAdder> bookmarkAdder;
     bool  bShowBorder;
     juce::Rectangle<int> wndLoc;
-    String  strName;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TransparentWnd)
 };
 

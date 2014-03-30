@@ -96,7 +96,10 @@ public:
 
     void mergeChanges(var changes)
     {
-
+        if (changes["action"].isString() && changes["action"].toString().compare("add") == 0)
+        {
+            ;
+        }
     }
 
     void saveToFile(const String& strFile = String::empty )

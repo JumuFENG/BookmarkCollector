@@ -14,6 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "SelectBookmarkFolder.h"
 #include "BookmarkFile.h"
+#include "DeskWndObserver.h"
 
 //==============================================================================
 /*
@@ -23,13 +24,24 @@ class BookmarkAdder
     , public ButtonListener
 {
 public:
-    BookmarkAdder(const String& name) 
+    BookmarkAdder() 
         : topSideHeigth(115)
         , bExpanded(false)
         , bookmarkListener(nullptr)
     {
         // In your constructor, you should add any child components, and
         // initialise any special settings that your component needs.
+        TCHAR tName[MAX_PATH] = {0};
+        DeskWndObserver::getInstance()->GetWindowTitle(tName);
+        webName = String::fromUTF8(tName);
+        webName = webName.substring(0, webName.indexOf(String(" - Mozilla Firefox")));
+
+        url = DeskWndObserver::getInstance()->GetWebHref();
+        if (!(url.startsWith("http://") || url.startsWith("https://")))
+        {
+            url = String("http://") + url;
+        }
+
         setLookAndFeel(&v1);
         labelTitle.setFont(20.0f);
         labelTitle.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.title"), dontSendNotification);
@@ -38,8 +50,7 @@ public:
         labelName.setFont(15.0f);
         labelName.setText(LoadDtdData::getInstance()->getEntityFromDtds("adder.name"), dontSendNotification);
         addAndMakeVisible(labelName);
-//        txtName.setFont(Font("微软雅黑", 14.0f, 0));
-        txtName.setText(name);
+        txtName.setText(webName);
         addAndMakeVisible(txtName);
 
         labelFolder.setFont(15.0f);
@@ -109,6 +120,13 @@ public:
         }
         else if ( &btnDone == btnThatClicked )
         {
+            var newRecord = JSON::parse("{}");
+            newRecord.getDynamicObject()->setProperty("name", webName);
+            newRecord.getDynamicObject()->setProperty("url", url);
+            var varNewRec = JSON::parse("{}");
+            varNewRec.getDynamicObject()->setProperty("action", "add");
+            varNewRec.getDynamicObject()->setProperty("detail", newRecord);
+            BookmarkFileIO::getInstance()->addAnRecord(varNewRec);
             bookmarkListener->onMessageTriggered(BookMarkListener::kDone);
         }
         else if ( &btnCancle == btnThatClicked )
@@ -140,6 +158,7 @@ private:
 
     LookAndFeel_V1 v1;
 
+    String     webName;
     String     url;
 
 

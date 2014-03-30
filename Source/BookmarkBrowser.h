@@ -132,6 +132,7 @@ public:
     void paint (Graphics&);
     void resized();
     void addChildrenFolders(var folders);
+    bool isContainerEmpty();
     void setNewSize();
     void onNewSize();
     void addSizeChangeListener(SizeChangeListener* lsn);

@@ -41,6 +41,10 @@ BookmarkFolder::BookmarkFolder(var itm, bool canRename)
 
     childFolders = new BookmarkFolderContainer();
     addChildComponent(childFolders);
+    if (!item["content"].isVoid())
+    {
+        childFolders->addChildrenFolders(item["content"]);
+    }
     childFolders->addSizeChangeListener(this);
     addMouseListener(this, true);
 }
@@ -87,10 +91,17 @@ void BookmarkFolder::resized()
 
 void BookmarkFolder::showChildren()
 {
-    childFolders->setVisible(true);
-    childFolders->setTopLeftPosition(1 + triWidth, iconWidth + 3);
-    childFolders->setSize(getWidth() - triWidth, 100);
-    childFolders->addChildrenFolders(item["content"]);
+    if (bExpanded)
+    {
+        childFolders->setVisible(true);
+        childFolders->setTopLeftPosition(1 + triWidth, iconWidth + 3);
+        childFolders->setSize(getWidth() - triWidth, childFolders->getHeight()); //设置合适的宽度
+        childFolders->setNewSize();// 设置合适的高度
+        if (childFolders->isContainerEmpty())
+        {
+            childFolders->addChildrenFolders(item["content"]);
+        }
+    }
 }
 
 void BookmarkFolder::hideChildren()
@@ -153,6 +164,7 @@ void BookmarkFolder::mouseUp(const MouseEvent& event)
     if (event.mods.isPopupMenu())//.getCurrentModifiers().
     {
         PopupMenu popMenu;
+        popMenu.dismissAllActiveMenus();
         popMenu.addItem(3101, LoadDtdData::getInstance()->getEntityFromDtds("menu.newfolder"));
         if (3101 == popMenu.show())
         {
@@ -211,39 +223,6 @@ BookmarkFolderContainer::BookmarkFolderContainer(var folders)
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
 
-//     var ufolder;
-// 
-//     var uitem = JSON::parse("{}");
-//     uitem.getDynamicObject()->setProperty("name", "baidu");
-//     uitem.getDynamicObject()->setProperty("url", "www.baidu.com");
-//     for (int i = 0; i < 5; ++i)
-//     {
-//         ufolder.append(uitem);
-//     }
-// 
-//     var fitem = JSON::parse("{}");
-//     fitem.getDynamicObject()->setProperty("name", "hello");
-//     fitem.getDynamicObject()->setProperty("content", ufolder);
-// 
-//     var chItem;
-//     for (int i = 0; i < 3; ++i)
-//     {
-//         chItem.append(fitem);
-//     }
-//     for (int i = 0; i < 5; ++i)
-//     {
-//         chItem.append(uitem);
-//     }
-//     var chFolder = JSON::parse("{}");
-//     chFolder.getDynamicObject()->setProperty("name", "toolbar");
-//     chFolder.getDynamicObject()->setProperty("content",chItem);
-//     varfolders.append(chFolder);
-// 
-//     var chNoclass = JSON::parse("{}");
-//     chNoclass.getDynamicObject()->setProperty("name", "noclassify");
-//     chNoclass.getDynamicObject()->setProperty("content",chItem);
-//     varfolders.append(chNoclass);
-
     int vsize = varfolders.size();
     for (int i = 0; i < vsize; ++i)
     {
@@ -254,8 +233,6 @@ BookmarkFolderContainer::BookmarkFolderContainer(var folders)
         addAndMakeVisible(folderContainer[i]);
         folderContainer[i]->addSizeChangeListener(this);
     }
-
-    setSize(100,100);// 主要目的设置高度，宽度Viewport确定
     setNewSize(); 
 }
 
@@ -279,20 +256,23 @@ void BookmarkFolderContainer::resized()
 {
     // This method is where you should set the bounds of any child
     // components that your component contains..
-	int iconWidth = jmin<int>(20, getWidth());
-	int iconHeigth = jmin<int>(20, getHeight());
 
     int oldY = 3;
     for (int i = 0; i < varfolders.size(); ++i)
     {
-        folderContainer[i]->setBounds(3, oldY, getWidth() - 6, iconHeigth);
-        oldY += folderContainer[i]->getAcctuallyHeight();
+        int acctHeight = folderContainer[i]->getAcctuallyHeight();
+        folderContainer[i]->setBounds(3, oldY, getWidth() - 6, acctHeight);
+        oldY += acctHeight;
     }
 }
 
 void BookmarkFolderContainer::addChildrenFolders(var folders)
 {
     int vsize = folders.size();
+    if (vsize <= 0)
+    {
+        return;
+    }
     for (int i = 0; i < vsize; ++i)
     {
         varfolders.append(folders[i]);
@@ -303,12 +283,18 @@ void BookmarkFolderContainer::addChildrenFolders(var folders)
         addAndMakeVisible(folderContainer[i]);
         folderContainer[i]->addSizeChangeListener(this);
     }
+    ((BookmarkFolder*)getParentComponent())->showChildren();
     setNewSize();
+}
+
+bool BookmarkFolderContainer::isContainerEmpty()
+{
+    return folderContainer.empty();
 }
 
 void BookmarkFolderContainer::setNewSize()
 {
-    int h = 4;
+    int h = 6;
     for (size_t fsize = 0;  fsize < folderContainer.size(); ++fsize)
     {
         int nH = folderContainer[fsize]->getAcctuallyHeight();

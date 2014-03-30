@@ -37,7 +37,8 @@ public:
         DeskWndObserver::getInstance()->FindAccObj();
         
         RECT rct = DeskWndObserver::getInstance()->getFavirateRect();
-        juce::Rectangle<int> wndPos(rct.left * 0.8f, rct.top * 0.8f, rct.right * 0.8f, rct.bottom * 0.8f);
+        juce::Rectangle<int> wndPos(int(rct.left * 0.8f), int(rct.top * 0.8f), 
+            int(rct.right * 0.8f), int(rct.bottom * 0.8f));
         wnd = new TransparentWnd(wndPos);
         wnd->addToDesktop(ComponentPeer::windowIsTemporary);
         wnd->setAlwaysOnTop(true);

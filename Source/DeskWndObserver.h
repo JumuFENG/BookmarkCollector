@@ -51,7 +51,11 @@ public:
   
     void FindAccObj()
     {
-        WindowAccessHelper::FindAccObj(wndHandle, accfavirateObjData);
+        if (!WindowAccessHelper::FindAccObj(wndHandle, accfavirateObjData))
+        {
+            accfavirateObjData.m_Description = TEXT("±‡º≠¥À È«©");
+            WindowAccessHelper::FindAccObj(wndHandle, accfavirateObjData);
+        }
         WindowAccessHelper::FindAccObj(wndHandle, accaddressObjData);
     }
 
@@ -69,7 +73,6 @@ public:
 
     int Convert(const char* strIn, char* strOut, int sourceCodepage, int targetCodepage)
     {
-        int len=lstrlen(strIn);
         int unicodeLen=MultiByteToWideChar(sourceCodepage,0,strIn,-1,NULL,0);
         wchar_t* pUnicode;
         pUnicode=new wchar_t[unicodeLen+1];

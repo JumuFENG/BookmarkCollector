@@ -40,49 +40,49 @@ struct WinAccObj{
 };
 
 
-class AccObjectData{
-public:
-    /*
-    @param mainClsName 主窗口类名
-    @param wndName 对象名称
-    @param roleName 对象role name
-    @param clsName 所在窗口类名(有的与主窗口类名一样)
-    */
-	AccObjectData(LPCTSTR mainClsName = TEXT("") ,
-        LPCTSTR wndName = TEXT(""),LPCTSTR roleName = TEXT(""),
-        LPCTSTR clsName = TEXT(""))
-	{
-		m_MainClsName = mainClsName;
-		m_WndName = wndName;
-		m_RoleName = roleName;
-		m_ClsName = clsName;
-
-		m_MainClsName = (NULL == m_MainClsName) ? TEXT("") : m_MainClsName;
-		m_WndName = (NULL == m_WndName) ? TEXT("") : m_WndName;
-		m_RoleName = (NULL == m_RoleName) ? TEXT("") : m_RoleName;
-		m_ClsName = (NULL == m_ClsName || TEXT("") == m_ClsName) ? m_MainClsName : m_ClsName;
-		m_hMainWnd = NULL;
-		m_hAddressWnd = NULL;
-		m_ptCenterAddress.x = 0;
-		m_ptCenterAddress.y = 0;
-	}
-
-	~AccObjectData(){}
-
-	LPCTSTR m_MainClsName;	// 主窗口类名
-	LPCTSTR m_ClsName;		// 所在窗口类名
-	LPCTSTR m_WndName;		// 对象名称
-	LPCTSTR m_RoleName;		// 对象role name
-	HWND m_hMainWnd;		// 主窗口句柄
-	HWND m_hAddressWnd;		// 对象所在窗口的句柄
-	POINT m_ptCenterAddress;	// 对象中心点位置（屏幕坐标）
-    RECT  rect;             // 对象所在位置
-
-	void GetBrowserMainWnd();
-	void GetAddressCenter();
-private:
-	void GetAddressHwnd();
-};
+// class AccObjectData{
+// public:
+//     /*
+//     @param mainClsName 主窗口类名
+//     @param wndName 对象名称
+//     @param roleName 对象role name
+//     @param clsName 所在窗口类名(有的与主窗口类名一样)
+//     */
+// 	AccObjectData(LPCTSTR mainClsName = TEXT("") ,
+//         LPCTSTR wndName = TEXT(""),LPCTSTR roleName = TEXT(""),
+//         LPCTSTR clsName = TEXT(""))
+// 	{
+// 		m_MainClsName = mainClsName;
+// 		m_WndName = wndName;
+// 		m_RoleName = roleName;
+// 		m_ClsName = clsName;
+// 
+// 		m_MainClsName = (NULL == m_MainClsName) ? TEXT("") : m_MainClsName;
+// 		m_WndName = (NULL == m_WndName) ? TEXT("") : m_WndName;
+// 		m_RoleName = (NULL == m_RoleName) ? TEXT("") : m_RoleName;
+// 		m_ClsName = (NULL == m_ClsName || TEXT("") == m_ClsName) ? m_MainClsName : m_ClsName;
+// 		m_hMainWnd = NULL;
+// 		m_hAddressWnd = NULL;
+// 		m_ptCenterAddress.x = 0;
+// 		m_ptCenterAddress.y = 0;
+// 	}
+// 
+// 	~AccObjectData(){}
+// 
+// 	LPCTSTR m_MainClsName;	// 主窗口类名
+// 	LPCTSTR m_ClsName;		// 所在窗口类名
+// 	LPCTSTR m_WndName;		// 对象名称
+// 	LPCTSTR m_RoleName;		// 对象role name
+// 	HWND m_hMainWnd;		// 主窗口句柄
+// 	HWND m_hAddressWnd;		// 对象所在窗口的句柄
+// 	POINT m_ptCenterAddress;	// 对象中心点位置（屏幕坐标）
+//     RECT  rect;             // 对象所在位置
+// 
+// 	void GetBrowserMainWnd();
+// 	void GetAddressCenter();
+// private:
+// 	void GetAddressHwnd();
+// };
 
 /**  
    WindowAccessHelper 命名空间包含获取窗口句柄、MSAA相关功能、模拟鼠标点击及模拟输入字符串等接口
@@ -350,7 +350,7 @@ namespace WindowAccessHelper{
 			if(hWnd)
 				GetClassName(hWnd, lpszClass, cchClass);
 			else
-				_tcscpy(lpszClass, TEXT("No window"));
+				_tcscpy_s(lpszClass, cchClass, TEXT("No window"));
 		}
 
 		return 1;
@@ -445,7 +445,7 @@ namespace WindowAccessHelper{
 	void ShowAccObjAndChildren(IAccessible *paccObj)
 	{
 		VARIANT varGet;
-		TCHAR szObjName[256] = {0}, szObjRole[256] = {0}, szObjClass[256] = {0}, szObjState[256] = {0};
+		TCHAR szObjName[256] = {0}, szObjRole[256] = {0}, szObjClass[256] = {0};
 		VariantInit(&varGet);
 		//通过get_accName得到Name
 		GetObjectName(paccObj, &varGet, szObjName, sizeof(szObjName));
@@ -758,7 +758,6 @@ namespace WindowAccessHelper{
 
 	HRESULT WalkTreeWithAccessibleChildren(IDispatch* pDisp, int depth)
 	{
-		HRESULT hr;
 		long childCount = GetObjectChildNum(pDisp);
 		if (childCount == 0)
 		{
@@ -866,8 +865,7 @@ namespace WindowAccessHelper{
 		//通过窗口句柄得到窗口的 IAccessible 接口指针。
 		IAccessible *paccMainWindow = NULL;
 		HRESULT hr;
-		bool isFind = false;
-		long pxleft=0,pxtop=0,pxwidth=0,pxheight=0;
+
 		if(S_OK == (hr = AccessibleObjectFromWindow(parent, 
 			OBJID_WINDOW, 
 			IID_IAccessible,
@@ -956,7 +954,7 @@ namespace WindowAccessHelper{
         return true;
     }
 
-	BOOL FindChild (IAccessible* paccParent, 
+	bool FindChild (IAccessible* paccParent, 
 		WinAccObj& accObj,
 		IAccessible** paccChild, 
 		VARIANT* pvarChild)
@@ -969,8 +967,8 @@ namespace WindowAccessHelper{
 		IAccessible* pCAcc = NULL;
 		IEnumVARIANT* pEnum = NULL;
 		IDispatch* pDisp = NULL;
-		BOOL found = false;
-		TCHAR szObjName[256] = {0}, szObjRole[256] = {0}, szObjClass[256] = {0}, szObjState[256] = {0};
+		bool found = false;
+		TCHAR szObjState[256] = {0};
 
 		//得到父亲支持的IEnumVARIANT接口
 		hr = paccParent -> QueryInterface(IID_IEnumVARIANT, (PVOID*) & pEnum);
@@ -1075,17 +1073,16 @@ namespace WindowAccessHelper{
 		return found;
 	}
 
-	void FindAccObj(HWND parent, WinAccObj& accObj)
+	bool FindAccObj(HWND parent, WinAccObj& accObj)
 	{
 		if (NULL == parent)
 		{
-			return;
+			return false;
 		}
 
         IAccessible *paccMainWindow = NULL;
 		HRESULT hr;
 		bool isFind = false;
-		long pxleft=0,pxtop=0,pxwidth=0,pxheight=0;
 		if(S_OK == (hr = AccessibleObjectFromWindow(parent, 
 			OBJID_WINDOW, 
 			IID_IAccessible,
@@ -1099,73 +1096,74 @@ namespace WindowAccessHelper{
 				paccMainWindow->Release();
 			}
 		}
+        return isFind;
     }
 }
 
-void AccObjectData::GetBrowserMainWnd()
-{
-    std::vector<HWND> wnds;
-
-    WindowAccessHelper::FindMainWnds(wnds, m_MainClsName);
-
-    if (wnds.empty())
-    {
-        m_hMainWnd = NULL;
-        return;
-    }
-#ifdef ADDRESS_TEST
-    m_hMainWnd = *(wnds.begin());
-#else
-    //	m_hMainWnd = *(wnds.begin());
-    m_hMainWnd = WindowAccessHelper::GetHwndToModify(wnds);
-#endif
-    // 窗口必须是最前，否则为NULL，扩展中用
-}
-
-void AccObjectData::GetAddressHwnd()
-{
-    if (NULL == m_hMainWnd)
-    {
-        GetBrowserMainWnd();
-    }
-    if ( _tcscmp(m_MainClsName, m_ClsName) == 0)
-    {
-        m_hAddressWnd = m_hMainWnd;
-        return;
-    }
-    std::vector<HWND> hControls;
-    WindowAccessHelper::FindSubWindows(m_hMainWnd, hControls, m_ClsName, m_WndName);
-    if (hControls.empty())
-    {
-        m_hAddressWnd = NULL;
-        return;
-    }
-    m_hAddressWnd = *(hControls.begin());
-}
-
-void AccObjectData::GetAddressCenter()
-{
-    if (NULL == m_hAddressWnd)
-    {
-        GetAddressHwnd();
-    }
-
-    if (NULL == m_hAddressWnd)
-    {
-        return;
-    }
-
-    if (m_hAddressWnd == m_hMainWnd)
-    {
-        WinAccObj winObj(m_WndName, m_RoleName, m_ClsName);
-        WindowAccessHelper::FindAccObj( m_hAddressWnd, winObj);
-        m_ptCenterAddress.x = winObj.m_rect.left + winObj.m_rect.right / 2;
-        m_ptCenterAddress.y = winObj.m_rect.top + winObj.m_rect.bottom / 2;
-    }
-    else
-    {
-        GetWindowRect(m_hAddressWnd, &rect);
-        m_ptCenterAddress.x = rect.left / 2 + rect.right / 2;
-        m_ptCenterAddress.y = rect.top / 2 + rect.bottom / 2;
-    }
-}
+// void AccObjectData::GetBrowserMainWnd()
+// {
+//     std::vector<HWND> wnds;
+// 
+//     WindowAccessHelper::FindMainWnds(wnds, m_MainClsName);
+// 
+//     if (wnds.empty())
+//     {
+//         m_hMainWnd = NULL;
+//         return;
+//     }
+// #ifdef ADDRESS_TEST
+//     m_hMainWnd = *(wnds.begin());
+// #else
+//     //	m_hMainWnd = *(wnds.begin());
+//     m_hMainWnd = WindowAccessHelper::GetHwndToModify(wnds);
+// #endif
+//     // 窗口必须是最前，否则为NULL，扩展中用
+// }
+// 
+// void AccObjectData::GetAddressHwnd()
+// {
+//     if (NULL == m_hMainWnd)
+//     {
+//         GetBrowserMainWnd();
+//     }
+//     if ( _tcscmp(m_MainClsName, m_ClsName) == 0)
+//     {
+//         m_hAddressWnd = m_hMainWnd;
+//         return;
+//     }
+//     std::vector<HWND> hControls;
+//     WindowAccessHelper::FindSubWindows(m_hMainWnd, hControls, m_ClsName, m_WndName);
+//     if (hControls.empty())
+//     {
+//         m_hAddressWnd = NULL;
+//         return;
+//     }
+//     m_hAddressWnd = *(hControls.begin());
+// }
+// 
+// void AccObjectData::GetAddressCenter()
+// {
+//     if (NULL == m_hAddressWnd)
+//     {
+//         GetAddressHwnd();
+//     }
+// 
+//     if (NULL == m_hAddressWnd)
+//     {
+//         return;
+//     }
+// 
+//     if (m_hAddressWnd == m_hMainWnd)
+//     {
+//         WinAccObj winObj(m_WndName, m_RoleName, m_ClsName);
+//         WindowAccessHelper::FindAccObj( m_hAddressWnd, winObj);
+//         m_ptCenterAddress.x = winObj.m_rect.left + winObj.m_rect.right / 2;
+//         m_ptCenterAddress.y = winObj.m_rect.top + winObj.m_rect.bottom / 2;
+//     }
+//     else
+//     {
+//         GetWindowRect(m_hAddressWnd, &rect);
+//         m_ptCenterAddress.x = rect.left / 2 + rect.right / 2;
+//         m_ptCenterAddress.y = rect.top / 2 + rect.bottom / 2;
+//     }
+// }

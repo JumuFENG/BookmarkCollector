@@ -19,9 +19,11 @@ BookmarkFolder::BookmarkFolder(var itm, bool canRename)
     , triHeight(10)
     , bExpanded(false)
     , bHover(false)
+    , bSelected(false)
     , sizeListener(nullptr)
+    , selectedFolderListener(nullptr)
 {
-    if ( BookmarkFileIO::getInstance()->isContentHasSubfolder(item["content"]))
+    if ( item["content"].toString().isNotEmpty() )
     {
         triBtn = new ArrowButton(String("arrowL"), 0.0f, Colour::fromRGBA(0x7b, 0x68, 0xee, 0x7f));
         triBtn->addListener(this);
@@ -36,10 +38,12 @@ BookmarkFolder::BookmarkFolder(var itm, bool canRename)
     if (canRename)
     {
         label->setEditable(false, true);
+        label->addListener(this);
     }
     addAndMakeVisible(label);
 
     childFolders = new BookmarkFolderContainer();
+    childFolders->addFolderChangeListener(this);
     addChildComponent(childFolders);
     if (!item["content"].isVoid())
     {
@@ -57,13 +61,13 @@ BookmarkFolder::~BookmarkFolder()
 void BookmarkFolder::paint(Graphics& g)
 {
     g.fillAll(Colours::white);
-    if (bHover)
+    if (bHover || bSelected)
     {
         validRect = Rectangle<int>(0, 0, getWidth(), iconWidth + 2 );
         Point<int> mPos = getMouseXYRelative();
-        if (validRect.contains(mPos))
+        if (validRect.contains(mPos) || bSelected)
         {
-            g.setColour(Colours::blue.withAlpha(0.15f));
+            g.setColour(Colours::blue.withAlpha(bSelected ? 0.35f : 0.15f));
             g.fillRect(validRect);
             g.setColour(Colours::lightgrey);
             g.drawRect(validRect, 1);
@@ -120,6 +124,22 @@ void BookmarkFolder::addSizeChangeListener(SizeChangeListener* lsn)
     sizeListener = lsn;
 }
 
+void BookmarkFolder::onSelectedFolderChanged(std::vector<String> selectedFolder)
+{
+    selectedFolder.insert(selectedFolder.begin(), item["name"]);
+    if (selectedFolder.empty() || item["name"].toString().isEmpty())
+    {
+        return;
+    }
+    ((BookmarkFolderContainer*)getParentComponent())->onSelectedFolderChanged(selectedFolder);
+    bSelected = false;
+}
+
+void BookmarkFolder::addFolderChangeListener(BookMarkFolerListener* fLsner)
+{
+    selectedFolderListener = fLsner;
+}
+
 void BookmarkFolder::setNewSize()
 {
     setSize(getWidth(), getAcctuallyHeight());
@@ -139,11 +159,17 @@ void BookmarkFolder::buttonClicked(Button* btnThatClicked)
     setNewSize();
 }
 
+void BookmarkFolder::unSelected()
+{
+    bSelected = false;
+    childFolders->unSelectedChildren();
+}
+
 void BookmarkFolder::labelTextChanged(Label* labelThatHasChanged)
 {
     if (labelThatHasChanged == label)
     {
-        item["name"] = label->getText();
+        item.getDynamicObject()->setProperty("name", label->getText());
     }
 }
 
@@ -161,8 +187,18 @@ void BookmarkFolder::addSubFolders(var sfdr)
 
 void BookmarkFolder::mouseUp(const MouseEvent& event)
 {
+    if (!validRect.contains(event.getEventRelativeTo(this).getMouseDownPosition()) )
+    {
+        return;
+    }
+
     if (event.mods.isPopupMenu())//.getCurrentModifiers().
     {
+        if (0 == item["name"].toString().compare(LoadDtdData::getInstance()->getEntityFromDtds("bookmark.notclassify")))
+        {
+            return;
+        }
+        Logger::writeToLog("to be shown Popup Menu");
         PopupMenu popMenu;
         popMenu.dismissAllActiveMenus();
         popMenu.addItem(3101, LoadDtdData::getInstance()->getEntityFromDtds("menu.newfolder"));
@@ -175,6 +211,25 @@ void BookmarkFolder::mouseUp(const MouseEvent& event)
             var childFdr;
             childFdr.append(newFolder);
             addSubFolders(childFdr);
+        }
+    }
+    else
+    {
+        if (item["name"].toString().isEmpty())
+        {
+            return;
+        }
+        bSelected = true;
+        childFolders->unSelectedChildren();
+        std::vector<String> selected;
+        selected.push_back(item["name"]);
+        if (selectedFolderListener != nullptr)
+        {
+            selectedFolderListener->onSelectedFolderChanged(selected);
+        }
+        else
+        {
+            ((BookmarkFolderContainer*)getParentComponent())->onSelectedFolderChanged(selected);
         }
     }
 }
@@ -209,6 +264,13 @@ int BookmarkFolder::getAcctuallyHeight()
     return bExpanded ? iconWidth + childFolders->getHeight() : iconWidth + 3;
 }
 
+var BookmarkFolder::getBookmarkFolderTree()
+{
+    var varChild = item;
+    varChild.getDynamicObject()->setProperty("content", childFolders->getChildrenFolderTree());
+    return varChild;
+}
+
 //=======================================================================
 BookmarkFolderContainer::BookmarkFolderContainer()
     : sizeListener(nullptr)
@@ -219,6 +281,7 @@ BookmarkFolderContainer::BookmarkFolderContainer()
 BookmarkFolderContainer::BookmarkFolderContainer(var folders) 
     : varfolders(folders)
     , sizeListener(nullptr)
+    , selectedFolderListener(nullptr)
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
@@ -315,4 +378,45 @@ void BookmarkFolderContainer::addSizeChangeListener(SizeChangeListener* lsn)
 void BookmarkFolderContainer::onNewSize()
 {
     setNewSize();
+}
+
+void BookmarkFolderContainer::unSelectedChildren()
+{
+    for (std::vector<ScopedPointer<BookmarkFolder> >::iterator it = folderContainer.begin();
+        it != folderContainer.end(); ++it)
+    {
+        if (! (*it)->getBounds().contains(getMouseXYRelative()))
+        {
+            (*it)->unSelected();
+        }
+    }
+}
+
+void BookmarkFolderContainer::onSelectedFolderChanged(std::vector<String> selectedFolder)
+{
+    unSelectedChildren();
+    if (selectedFolderListener != nullptr)
+    {
+        selectedFolderListener->onSelectedFolderChanged(selectedFolder);
+    }
+    else
+    {
+        ((BookmarkFolder*)getParentComponent())->onSelectedFolderChanged(selectedFolder);
+    }
+}
+
+void BookmarkFolderContainer::addFolderChangeListener(BookMarkFolerListener* fLsner)
+{
+    selectedFolderListener = fLsner;
+}
+
+var BookmarkFolderContainer::getChildrenFolderTree()
+{
+    var varChild;
+    for (std::vector<ScopedPointer<BookmarkFolder> >::iterator it = folderContainer.begin();
+        it != folderContainer.end(); ++it)
+    {
+        varChild.append((*it)->getBookmarkFolderTree());
+    }
+    return varChild;
 }

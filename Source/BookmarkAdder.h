@@ -115,17 +115,25 @@ public:
         }
         if ( &btnDel == btnThatClicked )
         {
-            selectFolder.testAddChild();
-            //bookmarkListener->onMessageTriggered(BookMarkListener::kDel);
+            var newRecord = JSON::parse("{}");
+            newRecord.getDynamicObject()->setProperty("path", selectFolder.getSelectedFolderPath() + webName);
+            newRecord.getDynamicObject()->setProperty("url", url);
+            newRecord.getDynamicObject()->setProperty("time", Time::getCurrentTime().toString(true, false));
+            var tVar; tVar.append(newRecord);
+            var varNewRec = JSON::parse("{}");
+            varNewRec.getDynamicObject()->setProperty("removes", tVar);
+            BookmarkFileIO::getInstance()->removeRecord(varNewRec);
+            bookmarkListener->onMessageTriggered(BookMarkListener::kDel);
         }
         else if ( &btnDone == btnThatClicked )
         {
             var newRecord = JSON::parse("{}");
-            newRecord.getDynamicObject()->setProperty("name", webName);
+            newRecord.getDynamicObject()->setProperty("path", selectFolder.getSelectedFolderPath() + webName);
             newRecord.getDynamicObject()->setProperty("url", url);
+            newRecord.getDynamicObject()->setProperty("time", Time::getCurrentTime().toString(true, false));
+            var tVar; tVar.append(newRecord);
             var varNewRec = JSON::parse("{}");
-            varNewRec.getDynamicObject()->setProperty("action", "add");
-            varNewRec.getDynamicObject()->setProperty("detail", newRecord);
+            varNewRec.getDynamicObject()->setProperty("add", tVar);
             BookmarkFileIO::getInstance()->addAnRecord(varNewRec);
             bookmarkListener->onMessageTriggered(BookMarkListener::kDone);
         }
@@ -133,7 +141,7 @@ public:
         {
             bookmarkListener->onMessageTriggered(BookMarkListener::kCancle);
         }
-     }
+    }
 
     void addBookmarkListener(BookMarkListener* listener)
     {

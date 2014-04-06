@@ -24,4 +24,13 @@ public:
     virtual void onMessageTriggered(BookmarkMessageType tp, const String& cmdMsg = String::empty) = 0;
 };
 
+class BookMarkFolerListener{
+public:
+    BookMarkFolerListener(){}
+    virtual ~BookMarkFolerListener(){}
+
+    virtual void onSelectedFolderChanged(std::vector<String> curSelected) = 0;
+        
+};
+
 #endif  // BOOKMARKLISTENER_H_INCLUDED

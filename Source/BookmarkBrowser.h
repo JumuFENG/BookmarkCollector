@@ -13,6 +13,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "BookmarkFile.h"
+#include "BookMarkListener.h"
 
 //==============================================================================
 /*
@@ -62,6 +63,7 @@ class BookmarkFolder
     , public Component
     , public LabelListener
     , public SizeChangeListener
+    , public BookMarkFolerListener
 {
 public:
     BookmarkFolder(var itm, bool canRename = true);
@@ -79,29 +81,27 @@ public:
     void hideChildren();
 
     void buttonClicked(Button* btnThatClicked);
+    void unSelected();
 
     void labelTextChanged(Label* labelThatHasChanged);
-
     void mouseUp(const MouseEvent& event);
     void mouseDoubleClick(const MouseEvent& event);
     void mouseEnter(const MouseEvent& event);
-
     void mouseExit(const MouseEvent& event);
 
     int getAcctuallyHeight();
-
     void setNewSize();
-
     void addSubFolders(var sfdr);
-
     void onNewSize();
-
     void addSizeChangeListener(SizeChangeListener* lsn);
+    void onSelectedFolderChanged(std::vector<String> selectedFolder);
+    void addFolderChangeListener(BookMarkFolerListener* fLsner);
+    var getBookmarkFolderTree();
 
 private:
     var    item;
     Image  img;
-    Rectangle<int> validRect;
+    juce::Rectangle<int> validRect;
     ScopedPointer<ArrowButton> triBtn;
     ScopedPointer<FolderIcon>  icon;
     ScopedPointer<Label>       label;
@@ -109,11 +109,13 @@ private:
     ScopedPointer<BookmarkFolderContainer> childFolders;
 
     SizeChangeListener*  sizeListener;
-
+    BookMarkFolerListener* selectedFolderListener;
+    
     int    iconWidth;
     int    triWidth, triHeight;
     bool   bExpanded;
     bool   bHover;
+    bool   bSelected;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BookmarkFolder)
@@ -123,6 +125,7 @@ private:
 class BookmarkFolderContainer    
     : public Component
     , public SizeChangeListener
+    , public BookMarkFolerListener
 {
 public:
     BookmarkFolderContainer();
@@ -136,11 +139,17 @@ public:
     void setNewSize();
     void onNewSize();
     void addSizeChangeListener(SizeChangeListener* lsn);
+    void onSelectedFolderChanged(std::vector<String> selectedFolder);
+    void addFolderChangeListener(BookMarkFolerListener* fLsner);
+    void unSelectedChildren();
+
+    var getChildrenFolderTree();
 
 private:
 	std::vector<ScopedPointer<BookmarkFolder> >  folderContainer;
     var  varfolders;   // array
     SizeChangeListener* sizeListener;
+    BookMarkFolerListener* selectedFolderListener;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (BookmarkFolderContainer)

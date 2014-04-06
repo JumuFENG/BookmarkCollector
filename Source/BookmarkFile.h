@@ -45,6 +45,146 @@ private:
     String dtdStrings;
 };
 
+class BookmarkNode{
+public:
+    BookmarkNode(const String& n = String::empty)
+        : name(n)
+    {};
+
+    ~BookmarkNode(){};
+
+    void parseVar(var root)
+    {
+        if (!root.isArray())
+        {
+            return;
+        }
+        for (int i = 0; i < root.size(); ++i)
+        {
+            if (root[i]["content"].isUndefined())
+            {
+                val.push_back(JSON::toString(root[i], true));
+            }
+            else
+            {
+                std::shared_ptr<BookmarkNode> bn =
+                    std::shared_ptr<BookmarkNode>(new BookmarkNode(root[i]["name"]));
+                bn->parseVar(root[i]["content"]);
+                content.push_back(bn);
+            }
+        }
+    }
+
+    var  toVar()
+    {
+        var root;
+        if (name.isEmpty())
+        {
+            for (std::vector<String>::iterator vIt = val.begin(); 
+                vIt != val.end(); ++vIt)
+            {
+                root.append(*vIt);
+            }
+            for (std::vector<std::shared_ptr<BookmarkNode> >::iterator vbIt = content.begin();
+                vbIt != content.end(); ++vbIt)
+            {
+                root.append((*vbIt)->toVar());
+            }
+        }
+        else
+        {
+            root = JSON::parse("{}");
+            root.getDynamicObject()->setProperty("name", name);
+            var troot;
+            for (std::vector<String>::iterator vIt = val.begin(); 
+                vIt != val.end(); ++vIt)
+            {
+                troot.append(*vIt);
+            }
+            for (std::vector<std::shared_ptr<BookmarkNode> >::iterator vbIt = content.begin();
+                vbIt != content.end(); ++vbIt)
+            {
+                troot.append((*vbIt)->toVar());
+            }
+            root.getDynamicObject()->setProperty("content", troot);
+        }
+        Logger::writeToLog(JSON::toString(root, true));
+        return root;
+    }
+
+    String Name()
+    {
+        return name;
+    }
+
+    std::vector<std::shared_ptr<BookmarkNode> >& Content()
+    {
+        return content;
+    }
+
+    void addABookmark(std::vector<String> path, var varval)
+    {
+        if (name.isNotEmpty())
+        {
+            if (path.empty())
+            {
+                val.push_back(JSON::toString(varval, true));
+                return;
+            }
+        if (path.size() == 1) 
+        {
+            if (name.compare(path.front()) != 0)
+            {
+                return;
+            }
+            val.push_back(JSON::toString(varval, true));
+            return;
+        }
+        }
+        for (std::vector<std::shared_ptr<BookmarkNode> >::iterator
+            vit = content.begin(); vit != content.end(); ++vit)
+        {
+            if ((*vit)->Name().compare(path.front()) == 0)
+            {
+                path.erase(path.begin());
+                return (*vit)->addABookmark(path, varval);
+            }
+        }
+        std::shared_ptr<BookmarkNode> bknode = std::shared_ptr<BookmarkNode>( new BookmarkNode(path.front()) );
+        path.erase(path.begin());
+        bknode->addABookmark(path, varval);
+    }
+
+    void mergeFolders(BookmarkNode* folderNodes)
+    {
+        size_t curNum = content.size();
+        std::vector<std::shared_ptr<BookmarkNode> > newNodes = folderNodes->Content();
+        content.insert(content.end(), newNodes.begin(), newNodes.end());
+        if (content.empty())
+        {
+            return;
+        }
+        for (size_t j = curNum; j < content.size(); ++j)
+        {
+            for (size_t i = 0; i < curNum; ++i)
+            {
+                if (content[j]->Name().compare(content[i]->Name()) == 0)
+                {
+                    content[i]->mergeFolders(content[j].get());
+                    content.erase(content.begin() + j);
+                    --j;
+                    break;
+                }
+            }
+        }
+    }
+
+private:
+    String                  name;
+    std::vector<String>     val;
+    std::vector<std::shared_ptr<BookmarkNode> > content;
+};
+
 class BookmarkFileIO {
 public:
     BookmarkFileIO(){}
@@ -69,17 +209,17 @@ public:
         {
             var toolbar = JSON::parse("{}");
             toolbar.getDynamicObject()->setProperty("name", LoadDtdData::getInstance()->getEntityFromDtds("bookmark.toolbar"));
-            toolbar.getDynamicObject()->setProperty("content", String::empty);
+            toolbar.getDynamicObject()->setProperty("content", var());
             var noclass = JSON::parse("{}");
             noclass.getDynamicObject()->setProperty("name", LoadDtdData::getInstance()->getEntityFromDtds("bookmark.notclassify"));
-            noclass.getDynamicObject()->setProperty("content", String::empty);
+            noclass.getDynamicObject()->setProperty("content", var());
 
             bookmarks.append(toolbar);
             bookmarks.append(noclass);
 
             bookmarkOrigin = JSON::parse("{}");
             bookmarkOrigin.getDynamicObject()->setProperty("base", bookmarks);
-            bookmarkOrigin.getDynamicObject()->setProperty("changerecords", String::empty);
+            bookmarkOrigin.getDynamicObject()->setProperty("changerecords", JSON::parse("{}"));
         }
     }
 
@@ -90,38 +230,147 @@ public:
 
     void addAnRecord(var changes)
     {
-        bookmarkOrigin["changerecords"].append(changes);
+        if (bookmarkOrigin["changerecords"].isVoid())
+        {
+            bookmarkOrigin.getDynamicObject()->setProperty("changerecords", JSON::parse("{}"));
+        }
+        if (bookmarkOrigin["changerecords"]["add"].isVoid())
+        {
+            bookmarkOrigin["changerecords"].getDynamicObject()->setProperty("add", changes["add"]);
+        }
+        else
+        {
+            for (int i = 0; i < changes["add"].size(); ++i)
+            {
+                bookmarkOrigin["changerecords"]["add"].append(changes["add"][i]);
+            }
+        }
+        mergeChanges(changes);
+    }
+
+    void removeRecord(var changes)
+    {
+        if (bookmarkOrigin["changerecords"].isVoid())
+        {
+            bookmarkOrigin.getDynamicObject()->setProperty("changerecords", JSON::parse("{}"));
+        }
+        if (bookmarkOrigin["changerecords"]["removes"].isVoid())
+        {
+            bookmarkOrigin["changerecords"].getDynamicObject()->setProperty("removes", changes["removes"]);
+        }
+        else
+        {
+            for (int i = 0; i < changes["removes"].size(); ++i)
+            {
+                bookmarkOrigin["changerecords"]["removes"].append(changes["removes"][i]);
+            }
+        }
         mergeChanges(changes);
     }
 
     void mergeChanges(var changes)
     {
-        if (changes["action"].isString() && changes["action"].toString().compare("add") == 0)
+        var varAdds = changes["add"];
+        for (int i = 0; i < varAdds.size(); ++i)
         {
-            ;
+            String path = varAdds[i]["path"];
+            String name = path.substring(path.lastIndexOf("\\") + 1);
+            NamedValueSet vset = varAdds[i].getDynamicObject()->getProperties();
+            var rec = JSON::parse("{}");
+            rec.getDynamicObject()->setProperty("name", name);
+            for (int j = 0; j < vset.size(); ++j)
+            {
+                String id = vset.getName(j).toString();
+                if (id.compare("path") == 0 || id.compare("time") == 0)
+                {
+                    continue;
+                }
+                rec.getDynamicObject()->setProperty(vset.getName(j), vset.getValueAt(j));
+            }
+            addABookmark( path.dropLastCharacters(name.length()), rec);
+        }
+        var varRemoves = changes["removes"];
+        for (int i = 0; i < varRemoves.size(); ++i)
+        {
+            String path = varRemoves[i]["path"];
+            String name = path.substring(path.lastIndexOf("\\") + 1);
+            removeABookmark( path.dropLastCharacters(name.length()), name);
+        }
+    }
+
+    void addABookmark(const String& path, var val)
+    {
+        if (path.isEmpty())
+        {
+            return;
+        }
+        std::vector<String> vecPath;
+        int startIdx = 0;
+        int endIdx;
+        while ((endIdx = path.indexOf(startIdx, "\\") )> 0)
+        {
+            vecPath.push_back(path.substring(startIdx, endIdx));
+            startIdx = endIdx + 1;
+        }
+        Logger::writeToLog(JSON::toString(bookmarks, true));
+        BookmarkNode bnode;
+        bnode.parseVar(bookmarks);
+        bnode.addABookmark(vecPath, val);
+        bookmarks = bnode.toVar();
+    }
+
+    void genBookmarkVar(var& root, std::vector<String> path, var val)
+    {
+        if (path.size() == 0)
+        {
+            root.append(val);
+            Logger::writeToLog(JSON::toString(root, true));
+            return;
+        }
+        String curFolder = path.front();
+        path.erase(path.begin());
+        for (int i = 0; i < root.size(); ++i)
+        {
+            if (root[i]["name"].toString().compare(curFolder) == 0)
+            {
+                return genBookmarkVar(root[i].getDynamicObject()->getProperty("content"), path, val);
+            }
+        }
+        var varNew = JSON::parse("{}");
+        varNew.getDynamicObject()->setProperty("name", curFolder);
+        var varArray = var();
+        genBookmarkVar(varArray, path, val);
+        varNew.getDynamicObject()->setProperty("content", varArray);
+    }
+
+    void removeABookmark(const String& path, const String& name)
+    {
+        if (path.isEmpty())
+        {
+            return;
         }
     }
 
     void saveToFile(const String& strFile = String::empty )
     {
-        filename = strFile.isNotEmpty() ? strFile : filename;
-        File::getCurrentWorkingDirectory().getChildFile(filename)
-            .replaceWithText(JSON::toString(bookmarkOrigin));
+        saveToFile(bookmarkOrigin);
     }
 
-    bool isContentHasSubfolder(var content)
+    void saveToFile(var toSave, const String& strFile = String::empty)
     {
-        int cSize = content.size();
-        bool beFolder = false;
-        for (int i = 0; i < cSize; ++i)
-        {
-            if (content[i]["content"].isArray())
-            {
-                beFolder = true;
-                break;
-            }
-        }
-        return beFolder;
+        filename = strFile.isNotEmpty() ? strFile : filename;
+        File::getCurrentWorkingDirectory().getChildFile(filename)
+            .replaceWithText(JSON::toString(toSave));
+    }
+
+    void updateBookmarkFolder(var newFolderTree)
+    {
+        BookmarkNode folderNodeBase;
+        folderNodeBase.parseVar(bookmarkOrigin["base"]);
+        BookmarkNode newFolder;
+        newFolder.parseVar(newFolderTree);
+        folderNodeBase.mergeFolders(&newFolder);
+        bookmarkOrigin.getDynamicObject()->setProperty("base", folderNodeBase.toVar());
     }
 
 private:

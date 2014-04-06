@@ -21,8 +21,9 @@
 */
 class SelectBookmarkFolder 
     : public Component
-    , ComboBoxListener
-    , ButtonListener
+    , public ComboBoxListener
+    , public ButtonListener
+    , public BookMarkFolerListener
 {
 public:
     SelectBookmarkFolder() 
@@ -40,12 +41,14 @@ public:
 
         viewPort = new Viewport();
         bookmarkFolderView = new BookmarkFolderContainer(BookmarkFileIO::getInstance()->getBookmarkLists());
+        bookmarkFolderView->addFolderChangeListener(this);
         viewPort->setViewedComponent(bookmarkFolderView);
         addAndMakeVisible(viewPort);
      }
 
     ~SelectBookmarkFolder()
     {
+        saveFolderTree();
     }
 
     void paint (Graphics& g)
@@ -131,8 +134,42 @@ public:
         getParentComponent()->setBounds(iright - ww, iTop, ww, hh);
     }
 
+    void changeSelectFolder(const String& folder)
+    {
+        folderCombox.setText(folder);
+    }
+
+    void onSelectedFolderChanged(std::vector<String> curSelected)
+    {
+        selectedFolerPath.clear();
+        selectedFolerPath = curSelected;
+        changeSelectFolder(curSelected.back());
+    }
+
+    void saveFolderTree()
+    {
+        BookmarkFileIO::getInstance()->updateBookmarkFolder(
+            bookmarkFolderView->getChildrenFolderTree());
+    }
+
+    String getSelectedFolderPath()
+    {
+        if (selectedFolerPath.empty())
+        {
+            return LoadDtdData::getInstance()->getEntityFromDtds("bookmark.notclassify") + "\\";
+        }
+        String path = String::empty;
+        for (std::vector<String>::iterator it = selectedFolerPath.begin();
+            it != selectedFolerPath.end(); ++it)
+        {
+            path += (*it) + "\\";
+        }
+        return path;
+    }
+
     void testAddChild()
     {
+        saveFolderTree();
 //         var nf = JSON::parse("{}");
 //         nf.getDynamicObject()->setProperty("name", "new one");
 //         nf.getDynamicObject()->setProperty("content", String::empty);
@@ -153,6 +190,7 @@ private:
     ScopedPointer<ArrowButton> arrowBtn;
     ScopedPointer<Viewport>    viewPort;
     ScopedPointer<BookmarkFolderContainer>  bookmarkFolderView;
+    std::vector<String>        selectedFolerPath;   // 选中的文件夹全路径
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SelectBookmarkFolder)

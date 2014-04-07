@@ -22,6 +22,7 @@
 class TransparentWnd    
     : public Component
     , public BookMarkListener
+    , public ActionListener
 {
 public:
     TransparentWnd(juce::Rectangle<int> pos)
@@ -63,7 +64,7 @@ public:
         // This method is where you should set the bounds of any child
         // components that your component contains..
         //setBounds(1206, 36, 23, 16);//(28,20)(20,25)
-        setBounds(wndLoc);
+        //setBounds(wndLoc);
     }
 
     void mouseEnter(const MouseEvent&)
@@ -126,6 +127,19 @@ public:
             bookmarkAdder.reset();
             break;
         }
+    }
+
+    void actionListenerCallback(const String& message)
+    {
+        if (message.compare("browser window resized/moved") == 0)
+        {
+            setBounds(wndLoc);
+        }
+    }
+
+    void changeLocation(juce::Rectangle<int> newloc)
+    {
+        wndLoc = newloc;
     }
 
 private:

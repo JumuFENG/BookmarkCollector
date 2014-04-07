@@ -12,18 +12,12 @@ public:
         : wndClsName(TEXT("MozillaWindowClass"))
         , accfavirateObjData(TEXT("地址"), TEXT("按下按钮"), TEXT("MozillaWindowClass"), TEXT("收藏为书签"))
         , accaddressObjData(TEXT("搜索或输入网址 <Ctrl+L>"), TEXT("可编辑文本"), TEXT("MozillaWindowClass"))
-        , hObserver(NULL)
     {
         OleInitialize(NULL);
-//        hObserver = CreateThread(NULL, 0, DeskWinProc, this, 0, NULL);
     }
 
     ~DeskWndObserver()
     {
-        if ( NULL != hObserver)
-        {
-            WaitForSingleObject(hObserver, INFINITE);
-        }
         OleUninitialize();
     }
 
@@ -59,6 +53,20 @@ public:
         WindowAccessHelper::FindAccObj(wndHandle, accaddressObjData);
     }
 
+    void recaptureFavariteLoc()
+    {
+        RECT r = {0};
+        accfavirateObjData.m_rect = r;
+        accfavirateObjData.m_Description = TEXT("收藏为书签");
+        if (!WindowAccessHelper::FindAccObj(wndHandle, accfavirateObjData))
+        {
+            accfavirateObjData.m_Description = TEXT("编辑此书签");
+            WindowAccessHelper::FindAccObj(wndHandle, accfavirateObjData);
+        }
+    }
+
+    HWND GetBrowserHwnd(){return wndHandle;}
+
     UINT GetWindowTitle( LPTSTR lpszTitle )
     {
         TCHAR tmsz[MAX_PATH] = {0};
@@ -68,6 +76,10 @@ public:
 
     std::string GetWebHref()
     {
+        RECT r = {0};
+        accaddressObjData.m_rect = r;
+        memset(accaddressObjData.m_Value, 0, MAX_PATH);
+        WindowAccessHelper::FindAccObj(wndHandle, accaddressObjData);
         return accaddressObjData.m_Value;
     }
 
@@ -94,7 +106,6 @@ private:
     WinAccObj accaddressObjData;
     LPCTSTR   wndClsName;
     HWND     wndHandle;
-    HANDLE   hObserver;
 };
 
 DWORD WINAPI DeskWinProc( LPVOID lpParam )

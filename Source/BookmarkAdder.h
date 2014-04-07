@@ -72,6 +72,7 @@ public:
 
     ~BookmarkAdder()
     {
+        selectFolder.saveFolderTree();
     }
 
     void paint (Graphics& g)

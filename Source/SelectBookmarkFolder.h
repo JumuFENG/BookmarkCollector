@@ -48,7 +48,6 @@ public:
 
     ~SelectBookmarkFolder()
     {
-        saveFolderTree();
     }
 
     void paint (Graphics& g)

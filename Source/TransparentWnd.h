@@ -94,13 +94,21 @@ public:
             }
             return;
         }
-
+        if (event.getNumberOfClicks() > 1)
+        {
+            return;
+        }
         bookmarkAdder = std::shared_ptr<BookmarkAdder>(new BookmarkAdder()) ;
         bookmarkAdder->addBookmarkListener(this);
         bookmarkAdder->addToDesktop(ComponentPeer::windowIsTemporary);
         bookmarkAdder->setSize(278, 150);
         bookmarkAdder->setTopRightPosition(getX() + getWidth(), getY() + getHeight());
         bookmarkAdder->setVisible(true);
+    }
+
+    void mouseDoubleClick(const MouseEvent& event)
+    {
+
     }
 
     void mouseMove(const MouseEvent&)

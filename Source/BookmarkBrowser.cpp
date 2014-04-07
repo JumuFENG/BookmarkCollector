@@ -198,7 +198,6 @@ void BookmarkFolder::mouseUp(const MouseEvent& event)
         {
             return;
         }
-        Logger::writeToLog("to be shown Popup Menu");
         PopupMenu popMenu;
         popMenu.dismissAllActiveMenus();
         popMenu.addItem(3101, LoadDtdData::getInstance()->getEntityFromDtds("menu.newfolder"));
@@ -267,7 +266,11 @@ int BookmarkFolder::getAcctuallyHeight()
 var BookmarkFolder::getBookmarkFolderTree()
 {
     var varChild = item;
-    varChild.getDynamicObject()->setProperty("content", childFolders->getChildrenFolderTree());
+    var vatemp = childFolders->getChildrenFolderTree();
+    if (!vatemp.isVoid())
+    {
+        varChild.getDynamicObject()->setProperty("content", vatemp);
+    }
     return varChild;
 }
 

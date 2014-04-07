@@ -108,7 +108,6 @@ public:
             }
             root.getDynamicObject()->setProperty("content", troot);
         }
-        Logger::writeToLog(JSON::toString(root, true));
         return root;
     }
 
@@ -232,7 +231,7 @@ public:
             {
                 bookmarkOrigin = JSON::parse(jsonFile);
                 bookmarks = bookmarkOrigin["base"];
-                mergeChanges(bookmarkOrigin["changerecords"]);
+                parseChanges(bookmarkOrigin["changerecords"]);
             }
         }
         if (bookmarks == var())
@@ -275,7 +274,7 @@ public:
                 bookmarkOrigin["changerecords"]["add"].append(changes["add"][i]);
             }
         }
-        mergeChanges(changes);
+        parseChanges(changes);
     }
 
     void removeRecord(var changes)
@@ -295,7 +294,7 @@ public:
                 bookmarkOrigin["changerecords"]["removes"].append(changes["removes"][i]);
             }
         }
-        mergeChanges(changes);
+        parseChanges(changes);
     }
 
     bool bookmarkExist(var bookroot, std::vector<String> vecPath)
@@ -313,7 +312,7 @@ public:
         return false;
     }
 
-    void mergeChanges(var changes)
+    void parseChanges(var changes)
     {
         var varAdds = changes["add"];
         for (int i = 0; i < varAdds.size(); ++i)
@@ -373,7 +372,6 @@ public:
         {
             return;
         }
-        Logger::writeToLog(JSON::toString(bookmarks, true));
         BookmarkNode bnode;
         bnode.parseVar(bookmarks);
         bnode.addABookmark(vecPath, val);
@@ -412,6 +410,14 @@ public:
         newFolder.parseVar(newFolderTree);
         folderNodeBase.mergeFolders(&newFolder);
         bookmarkOrigin.getDynamicObject()->setProperty("base", folderNodeBase.toVar());
+    }
+
+    /*  合并更改到base，删除更改记录
+    */
+    void mergeChanges()
+    {
+        bookmarkOrigin.getDynamicObject()->setProperty("base", bookmarks);
+        bookmarkOrigin.getDynamicObject()->setProperty("changerecords", JSON::parse("{}"));
     }
 
 private:

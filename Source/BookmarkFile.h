@@ -179,6 +179,36 @@ public:
         }
     }
 
+    void removeABookmark(std::vector<String> path)
+    {
+        if (path.empty())
+        {
+            return;
+        }
+        
+        if (path.size() == 1)
+        {
+            for (std::vector<String>::iterator itv = val.begin();
+                itv != val.end(); ++itv)
+            {
+                if (path.front().compare(JSON::parse(*itv)["name"]) == 0)
+                {
+                    val.erase(itv);
+                    return;
+                }
+            }
+        }
+        for (std::vector<std::shared_ptr<BookmarkNode> >::iterator itc = content.begin();
+            itc != content.end(); ++itc)
+        {
+            if ((*itc)->Name().compare(path.front()) == 0)
+            {
+                path.erase(path.begin());
+                return (*itc)->removeABookmark(path);
+            }
+        }
+    }
+
 private:
     String                  name;
     std::vector<String>     val;
@@ -268,6 +298,21 @@ public:
         mergeChanges(changes);
     }
 
+    bool bookmarkExist(var bookroot, std::vector<String> vecPath)
+    {
+        int len = bookroot.size();
+        for (int i = 0; i < len; ++i)
+        {
+            if (bookroot[i]["name"].toString().compare(vecPath.front()) == 0)
+            {
+                vecPath.erase(vecPath.begin());
+                return vecPath.empty() ? true : 
+                    bookmarkExist(bookroot[i]["content"], vecPath);
+            }
+        }
+        return false;
+    }
+
     void mergeChanges(var changes)
     {
         var varAdds = changes["add"];
@@ -275,6 +320,18 @@ public:
         {
             String path = varAdds[i]["path"];
             String name = path.substring(path.lastIndexOf("\\") + 1);
+            std::vector<String> vecPath;
+            int startIdx = 0;
+            int endIdx;
+            while ((endIdx = path.indexOf(startIdx, "\\") ) > 0)
+            {
+                vecPath.push_back(path.substring(startIdx, endIdx));
+                startIdx = endIdx + 1;
+            }
+            if (bookmarkExist(bookmarks, vecPath))
+            {
+                continue;
+            }
             NamedValueSet vset = varAdds[i].getDynamicObject()->getProperties();
             var rec = JSON::parse("{}");
             rec.getDynamicObject()->setProperty("name", name);
@@ -287,30 +344,34 @@ public:
                 }
                 rec.getDynamicObject()->setProperty(vset.getName(j), vset.getValueAt(j));
             }
-            addABookmark( path.dropLastCharacters(name.length()), rec);
+            vecPath.pop_back();
+            addABookmark( vecPath, rec );
         }
         var varRemoves = changes["removes"];
         for (int i = 0; i < varRemoves.size(); ++i)
         {
             String path = varRemoves[i]["path"];
-            String name = path.substring(path.lastIndexOf("\\") + 1);
-            removeABookmark( path.dropLastCharacters(name.length()), name);
+            std::vector<String> vecPath;
+            int startIdx = 0;
+            int endIdx;
+            while ((endIdx = path.indexOf(startIdx, "\\") ) > 0)
+            {
+                vecPath.push_back(path.substring(startIdx, endIdx));
+                startIdx = endIdx + 1;
+            }
+            if (!bookmarkExist(bookmarks, vecPath))
+            {
+                continue;
+            }
+            removeABookmark( vecPath);
         }
     }
 
-    void addABookmark(const String& path, var val)
+    void addABookmark(std::vector<String> vecPath, var val)
     {
-        if (path.isEmpty())
+        if (vecPath.empty())
         {
             return;
-        }
-        std::vector<String> vecPath;
-        int startIdx = 0;
-        int endIdx;
-        while ((endIdx = path.indexOf(startIdx, "\\") )> 0)
-        {
-            vecPath.push_back(path.substring(startIdx, endIdx));
-            startIdx = endIdx + 1;
         }
         Logger::writeToLog(JSON::toString(bookmarks, true));
         BookmarkNode bnode;
@@ -319,36 +380,16 @@ public:
         bookmarks = bnode.toVar();
     }
 
-    void genBookmarkVar(var& root, std::vector<String> path, var val)
+    void removeABookmark(std::vector<String> vecPath)
     {
-        if (path.size() == 0)
-        {
-            root.append(val);
-            Logger::writeToLog(JSON::toString(root, true));
-            return;
-        }
-        String curFolder = path.front();
-        path.erase(path.begin());
-        for (int i = 0; i < root.size(); ++i)
-        {
-            if (root[i]["name"].toString().compare(curFolder) == 0)
-            {
-                return genBookmarkVar(root[i].getDynamicObject()->getProperty("content"), path, val);
-            }
-        }
-        var varNew = JSON::parse("{}");
-        varNew.getDynamicObject()->setProperty("name", curFolder);
-        var varArray = var();
-        genBookmarkVar(varArray, path, val);
-        varNew.getDynamicObject()->setProperty("content", varArray);
-    }
-
-    void removeABookmark(const String& path, const String& name)
-    {
-        if (path.isEmpty())
+        if (vecPath.empty())
         {
             return;
         }
+        BookmarkNode bnode;
+        bnode.parseVar(bookmarks);
+        bnode.removeABookmark(vecPath);
+        bookmarks = bnode.toVar();
     }
 
     void saveToFile(const String& strFile = String::empty )
